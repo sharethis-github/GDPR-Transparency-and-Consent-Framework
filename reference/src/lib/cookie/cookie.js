@@ -209,21 +209,24 @@ function readCookie(name) {
 
 function readEuconsentCookie(name) {
       return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            var cmp_url = (("https:" == document.location.protocol) ? "https://" : "http://") + "c.sharethis.mgr.consensu.org/v1.0/cmp/get_consent"
-            xhr.open("GET", cmp_url);
-            xhr.withCredentials = true;
-            xhr.responseType = "json";
-            xhr.onload = function() {
-                  if(xhr.response.cookie != "") {
-                      resolve(xhr.response.cookie);
-                  }else {
-                      resolve()
-                  }
-            }
-            xhr.send();
-      });
+        window.__cmp.bindEvent(window, 'message', function (e) {
 
+          // check the origin and event name
+          var origin_regex = /^(http|https):\/\/c.sharethis.mgr.consensu.org/;
+          if(origin_regex.test(e.origin) &&
+            e.data.domain === "sharethis.mgr.consensu.org" &&
+            e.data.event === "EU_CONSENT_COOKIE") {
+              var consent_str = e.data.value
+              if (consent_str === ""){
+                resolve()
+              } else {
+                resolve(consent_str);
+              }
+           } else {
+                resolve();
+           }
+        });
+      });
 }
 function writeCookie(name, value, maxAgeSeconds, path = '/') {
 	const maxAge = maxAgeSeconds === null ? '' : `;max-age=${maxAgeSeconds}`;
