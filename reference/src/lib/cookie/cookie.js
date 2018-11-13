@@ -215,8 +215,9 @@ function readEuconsentCookie(name) {
           var origin_regex = /^(http|https):\/\/c.sharethis.mgr.consensu.org/;
           if(origin_regex.test(e.origin) &&
             e.data.domain === "sharethis.mgr.consensu.org" &&
-            e.data.event === "EU_CONSENT_COOKIE") {
+            e.data.event === "EU_CONSENT_COOKIE_CMP") {
               var consent_str = e.data.value
+              console.log(consent_str);
               if (consent_str === ""){
                 resolve()
               } else {
@@ -226,6 +227,11 @@ function readEuconsentCookie(name) {
                 resolve();
            }
         });
+        var iframe = document.getElementById("st_gdpr_iframe").contentWindow
+        iframe.postMessage({
+           domain: 'sharethis.mgr.consensu.org',
+           event: "READ_EU_COOKIE_CMP"
+        }, '*');
       });
 }
 function writeCookie(name, value, maxAgeSeconds, path = '/') {
@@ -234,11 +240,12 @@ function writeCookie(name, value, maxAgeSeconds, path = '/') {
 }
 
 function writeEuconsentCookie(name, value) {
-         var xhr  = new XMLHttpRequest();
-         var cmp_url = (("https:" == document.location.protocol) ? "https://" : "http://") + "c.sharethis.mgr.consensu.org/v1.0/cmp/set_consent?cookie=" + value
-         xhr.open("GET", cmp_url);
-         xhr.withCredentials = true
-         xhr.send();
+        var iframe = document.getElementById("st_gdpr_iframe").contentWindow
+        iframe.postMessage({
+           domain: 'sharethis.mgr.consensu.org',
+           event: "WRITE_EU_COOKIE_CMP",
+           value: value
+        }, '*');
 }
 
 function readPublisherConsentCookie() {
