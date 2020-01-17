@@ -8,6 +8,28 @@ const COOKIE_DOMAIN = parts.length > 1 ? `;domain=.${parts.slice(-2).join('.')}`
 const COOKIE_MAX_AGE = 33696000;
 const COOKIE_NAME = 'euconsent';
 
+function readCookieSync(name) {
+  const cookie = '; ' + document.cookie;
+  const parts = cookie.split('; ' + name + '=');
+  var value = null;
+  if (parts.length === 2) {
+    value = parts.pop().split(';').shift();
+  }
+  return value;
+}
+
+// samesite support check
+var supports_samesite = false;
+try {
+  document.cookie = "st_samesite=1;SameSite=None;Secure";
+  if (readCookieSync("st_samesite")) {
+    supports_samesite = true;
+    document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
+  }
+} catch (err) {
+  supports_samesite = "error";
+}
+
 function readCookie(name) {
   const cookie = '; ' + document.cookie;
   const parts = cookie.split('; ' + name + '=');
@@ -26,18 +48,6 @@ function readCookie(name) {
     return Promise.resolve(value);
   }
   return Promise.resolve();
-}
-
-// samesite support check
-var supports_samesite = false;
-try {
-  document.cookie = "st_samesite=1;SameSite=None;Secure";
-  if (readCookie("st_samesite")) {
-    supports_samesite = true;
-    document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
-  }
-} catch (err) {
-  supports_samesite = "error";
 }
 
 function writeCookie({ name, value, path = '/'}) {
