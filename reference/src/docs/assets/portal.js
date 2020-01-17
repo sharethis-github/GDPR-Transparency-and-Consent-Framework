@@ -37,8 +37,7 @@ const commands = {
       if (cookie && typeof cookie == 'string') {
         writeCookie({
           name: COOKIE_NAME,
-          value: cookie,
-          path = '/'
+          value: cookie
         });
       }
     } catch (error) {
