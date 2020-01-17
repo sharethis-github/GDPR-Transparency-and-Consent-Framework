@@ -24,14 +24,14 @@ function writeCookie({ name, value, path = '/'}) {
 
 const commands = {
   readVendorList: () => {
-   return fetch('https://vendorlist.consensu.org/vendorlist.json')
-    .then(res => res.json())
-    .catch(err => {
-      log.error(`Failed to load vendor list from vendors.json`, err);
-    });
+    return fetch('https://vendorlist.consensu.org/vendorlist.json')
+      .then(res => res.json())
+      .catch(err => {
+        log.error(`Failed to load vendor list from vendors.json`, err);
+      });
   },
 
-	readVendorConsent: () => {
+  readVendorConsent: () => {
     let cookie = readCookie(COOKIE_NAME);
     try {
       if (cookie && typeof cookie == 'string') {
@@ -42,15 +42,14 @@ const commands = {
         });
       }
     } catch (error) {
-      
     } finally {
       return cookie;
     }
-	},
+  },
 
-	writeVendorConsent: ({encodedValue}) => {
-		return writeCookie({name: COOKIE_NAME, value: encodedValue});
-	}
+  writeVendorConsent: ({ encodedValue }) => {
+    return writeCookie({ name: COOKIE_NAME, value: encodedValue });
+  }
 };
 
 window.addEventListener('message', (event) => {
