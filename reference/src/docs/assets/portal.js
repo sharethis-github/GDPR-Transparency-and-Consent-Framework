@@ -18,7 +18,7 @@ function readCookie(name) {
 }
 
 function writeCookie({ name, value, path = '/'}) {
-	document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${COOKIE_MAX_AGE}`;
+	document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${COOKIE_MAX_AGE};SameSite=None;Secure`;
 	return Promise.resolve();
 }
 
@@ -32,7 +32,20 @@ const commands = {
   },
 
 	readVendorConsent: () => {
-		return readCookie(COOKIE_NAME);
+    let cookie = readCookie(COOKIE_NAME);
+    try {
+      if (cookie && typeof cookie == 'string') {
+        writeCookie({
+          name: COOKIE_NAME,
+          value: cookie,
+          path = '/'
+        });
+      }
+    } catch (error) {
+      
+    } finally {
+      return cookie;
+    }
 	},
 
 	writeVendorConsent: ({encodedValue}) => {
