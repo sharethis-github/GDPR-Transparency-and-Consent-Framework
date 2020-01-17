@@ -74,7 +74,7 @@ window.addEventListener('message', (event) => {
         vendorConsent: {
           ...data,
           result,
-          samesite
+          supports_samesite
         }
       }, event.origin);
     });
