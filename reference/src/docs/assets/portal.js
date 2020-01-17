@@ -18,7 +18,7 @@ function readCookie(name) {
 
   // Begin SameSite Migration: re-write cookies with SameSite=true if it's supported
   if (value) {
-    writeCookie(name, value);
+    writeCookie({ name, value });
   }
   // End SameSite Migration
 
