@@ -30,10 +30,14 @@ function readCookie(name) {
 
 // samesite support check
 var supports_samesite = false;
-document.cookie = "st_samesite=1;SameSite=None;Secure";
-if (readCookie("st_samesite")) {
-  supports_samesite = true;
-  document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
+try {
+  document.cookie = "st_samesite=1;SameSite=None;Secure";
+  if (readCookie("st_samesite")) {
+    supports_samesite = true;
+    document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
+  }
+} catch (err) {
+  supports_samesite = "error";
 }
 
 function writeCookie({ name, value, path = '/'}) {
