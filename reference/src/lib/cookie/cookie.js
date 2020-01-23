@@ -204,9 +204,25 @@ function readCookie(name) {
 	}
 }
 
+// samesite support check
+var supports_samesite = false;
+try {
+  document.cookie = "st_samesite=1;SameSite=None;Secure";
+  if (readCookieSync("st_samesite")) {
+    supports_samesite = true;
+    document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
+  }
+} catch (err) {
+  supports_samesite = false;
+}
+
 function writeCookie(name, value, maxAgeSeconds, path = '/') {
-	const maxAge = maxAgeSeconds === null ? '' : `;max-age=${maxAgeSeconds}`;
-	document.cookie = `${name}=${value};path=${path}${maxAge};SameSite=None;Secure`;
+  const maxAge = maxAgeSeconds === null ? '' : `;max-age=${maxAgeSeconds}`;
+  if (supports_samesite) {
+    document.cookie = `${name}=${value};path=${path}${maxAge};SameSite=None;Secure`;
+  } else {
+    document.cookie = `${name}=${value};path=${path}${maxAge}`;
+  }
 }
 
 function readPublisherConsentCookie() {
