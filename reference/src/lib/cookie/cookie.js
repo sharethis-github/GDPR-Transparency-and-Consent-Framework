@@ -204,6 +204,16 @@ function readCookie(name) {
 	}
 }
 
+function readCookieSync(name) {
+  const cookie = '; ' + document.cookie;
+  const parts = cookie.split('; ' + name + '=');
+  var value = null;
+  if (parts.length === 2) {
+    value = parts.pop().split(';').shift();
+  }
+  return value;
+}
+
 // samesite support check
 var supports_samesite = false;
 try {
