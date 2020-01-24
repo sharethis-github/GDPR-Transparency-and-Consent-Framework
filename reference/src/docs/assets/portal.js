@@ -27,7 +27,7 @@ try {
     document.cookie = "st_samesite=1;max-age=0;SameSite=None;Secure";
   }
 } catch (err) {
-  supports_samesite = "error";
+  supports_samesite = false;
 }
 
 function readCookie(name) {
