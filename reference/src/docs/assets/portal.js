@@ -5,7 +5,8 @@ import log from "../../lib/log";
 const host = (window && window.location && window.location.hostname) || '';
 const parts = host.split('.');
 const COOKIE_DOMAIN = parts.length > 1 ? `;domain=.${parts.slice(-2).join('.')}` : '';
-const COOKIE_MAX_AGE = 33696000;
+const COOKIE_MAX_AGE_13_MONTHS = 33696000;
+const COOKIE_MAX_AGE_9_MONTHS = 23328000;
 const COOKIE_NAME = 'euconsent';
 
 function readCookieSync(name) {
@@ -40,7 +41,7 @@ function readCookie(name) {
 
   // Begin SameSite Migration: re-write cookies with SameSite=true if it's supported
   if (value) {
-    writeCookie({ name, value });
+    writeCookie({ name, value, max_age: COOKIE_MAX_AGE_9_MONTHS });
   }
   // End SameSite Migration
 
@@ -50,14 +51,13 @@ function readCookie(name) {
   return Promise.resolve();
 }
 
-function writeCookie({ name, value, path = '/'}) {
+function writeCookie({ name, value, path = '/', max_age = COOKIE_MAX_AGE_13_MONTHS }) {
   if (supports_samesite) {
-    document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${COOKIE_MAX_AGE};SameSite=None;Secure`;
+    document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${max_age};SameSite=None;Secure`;
   }
   else {
-    document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${COOKIE_MAX_AGE}`;
+    document.cookie = `${name}=${value}${COOKIE_DOMAIN};path=${path};max-age=${max_age}`;
   }
-
   return Promise.resolve();
 }
 
