@@ -104,24 +104,25 @@ window.addEventListener('message', (event) => {
       switch (data.command) {
         case 'readAllCookies':
           payload = {
-            command: 'readAllCookies',
             v1: readCookieSync(COOKIE_NAME_V1),
             v2: readCookieSync(COOKIE_NAME_V2)
           };
         case 'readCookie':
           payload = { 
-            command: 'readCookie', 
             euconsent: readCookieSync(COOKIE_NAME_V2)
           };
           break;
         case 'writeCookie':
           payload = { 
-            command: 'writeCookie', 
-            success: writeCookieSync(data.euconsent) 
+            success: writeCookieSync(data.euconsent)
           };
           break;
       }
-      if (payload) event.source.postMessage(payload, event.origin);
+      if (payload) {
+        payload.command = data.command;
+        payload.supports_samesite = supports_samesite;
+        event.source.postMessage(payload, event.origin);
+      } 
     }
   }
 });
