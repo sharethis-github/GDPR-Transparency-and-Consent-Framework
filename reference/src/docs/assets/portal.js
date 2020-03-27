@@ -54,15 +54,15 @@ function writeCookie({ name, value, path = '/', max_age = COOKIE_MAX_AGE_13_MONT
   return Promise.resolve();
 }
 
+function writeCookieSync(value) {
+  var samesite = '';
+  if (supports_samesite) samesite = ';SameSite=None;Secure';
+  document.cookie = `${COOKIE_NAME_V2}=${value}${COOKIE_DOMAIN};path=/;max-age=${COOKIE_MAX_AGE_13_MONTHS}${samesite}`;
+  if (document.cookie) return true;
+  return false;
+}
+
 const commands = {
-
-  readAllCookies: () => {
-    return {
-      v1: readCookie(COOKIE_NAME_V1),
-      v2: readCookie(COOKIE_NAME_V2)
-    }
-  },
-
   readVendorList: () => {
    return fetch('https://vendorlist.consensu.org/vendorlist.json')
     .then(res => res.json())
@@ -70,29 +70,60 @@ const commands = {
       log.error(`Failed to load vendor list from vendors.json`, err);
     });
   },
-
   readVendorConsent: () => {
     return readCookie(COOKIE_NAME);
   },
-
   writeVendorConsent: ({encodedValue}) => {
     return writeCookie({name: COOKIE_NAME, value: encodedValue});
   }
 };
 
 window.addEventListener('message', (event) => {
-  const data = event.data.vendorConsent;
-  if (data && typeof commands[data.command] === 'function') {
-    const { command } = data;
-    commands[command](data).then(result => {
-      event.source.postMessage({
-        vendorConsent: {
-          ...data,
-          result,
-          supports_samesite
-        }
-      }, event.origin);
-    });
+  var data;
+  // v1 - we'll remove this entirely when we're not using v1 anymore
+  if (event.data.vendorConsent) {
+    data = event.data.vendorConsent;
+    if (data && typeof commands[data.command] === 'function') {
+      const { command } = data;
+      commands[command](data).then(result => {
+        event.source.postMessage({
+          vendorConsent: {
+            ...data,
+            result,
+            supports_samesite
+          }
+        }, event.origin);
+      });
+    }
   }
+  // v2 
+  else {
+    data = event.data;
+    if (data.command) {
+      var payload;
+      switch (data.command) {
+        case 'readAllCookies':
+          payload = {
+            command: 'readAllCookies',
+            v1: readCookieSync(COOKIE_NAME_V1),
+            v2: readCookieSync(COOKIE_NAME_V2)
+          };
+        case 'readCookie':
+          payload = { 
+            command: 'readCookie', 
+            euconsent: readCookieSync(COOKIE_NAME_V2)
+          };
+          break;
+        case 'writeCookie':
+          payload = { 
+            command: 'writeCookie', 
+            success: writeCookieSync(data.euconsent) 
+          };
+          break;
+      }
+      if (payload) event.source.postMessage(payload, event.origin);
+    }
+  }
+
 });
 window.parent.postMessage({ vendorConsent: { command: 'isLoaded' } }, '*');
