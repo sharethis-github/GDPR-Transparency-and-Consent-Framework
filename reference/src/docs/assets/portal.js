@@ -124,6 +124,7 @@ window.addEventListener('message', (event) => {
       if (payload) event.source.postMessage(payload, event.origin);
     }
   }
-
 });
-window.parent.postMessage({ vendorConsent: { command: 'isLoaded' } }, '*');
+
+window.parent.postMessage({ vendorConsent: { command: 'isLoaded' } }, '*'); // leave this in for transition period
+window.parent.postMessage({ command: 'isLoaded' }, '*');
