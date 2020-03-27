@@ -19,20 +19,6 @@ function readCookieSync(name) {
   return value;
 }
 
-function readCookie(name) {
-  const cookie = '; ' + document.cookie;
-  const parts = cookie.split('; ' + name + '=');
-  var value = null;
-  if (parts.length === 2) {
-    value = parts.pop().split(';').shift();
-  }
-
-  if (value) {
-    return Promise.resolve(value);
-  }
-  return Promise.resolve();
-}
-
 // samesite support check
 var supports_samesite = false;
 try {
@@ -43,6 +29,19 @@ try {
   }
 } catch (err) {
   supports_samesite = false;
+}
+
+function readCookie(name) {
+  const cookie = '; ' + document.cookie;
+  const parts = cookie.split('; ' + name + '=');
+  var value = null;
+  if (parts.length === 2) {
+    value = parts.pop().split(';').shift();
+  }
+  if (value) {
+    return Promise.resolve(value);
+  }
+  return Promise.resolve();
 }
 
 function writeCookie({ name, value, path = '/', max_age = COOKIE_MAX_AGE_13_MONTHS }) {
