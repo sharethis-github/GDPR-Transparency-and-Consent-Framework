@@ -6,8 +6,8 @@ const host = (window && window.location && window.location.hostname) || '';
 const parts = host.split('.');
 const COOKIE_DOMAIN = parts.length > 1 ? `;domain=.${parts.slice(-2).join('.')}` : '';
 const COOKIE_MAX_AGE_13_MONTHS = 33696000;
-const COOKIE_MAX_AGE_9_MONTHS = 23328000;
-const COOKIE_NAME = 'euconsent';
+const COOKIE_NAME_V1 = 'euconsent';
+const COOKIE_NAME_V2 = 'euconsent-v2';
 
 function readCookieSync(name) {
   const cookie = '; ' + document.cookie;
@@ -38,13 +38,6 @@ function readCookie(name) {
   if (parts.length === 2) {
     value = parts.pop().split(';').shift();
   }
-
-  // Begin SameSite Migration: re-write cookies with SameSite=true if it's supported
-  if (value) {
-    writeCookie({ name, value, max_age: COOKIE_MAX_AGE_9_MONTHS });
-  }
-  // End SameSite Migration
-
   if (value) {
     return Promise.resolve(value);
   }
@@ -61,6 +54,14 @@ function writeCookie({ name, value, path = '/', max_age = COOKIE_MAX_AGE_13_MONT
   return Promise.resolve();
 }
 
+function writeCookieSync(value) {
+  var samesite = '';
+  if (supports_samesite) samesite = ';SameSite=None;Secure';
+  document.cookie = `${COOKIE_NAME_V2}=${value}${COOKIE_DOMAIN};path=/;max-age=${COOKIE_MAX_AGE_13_MONTHS}${samesite}`;
+  if (document.cookie) return true;
+  return false;
+}
+
 const commands = {
   readVendorList: () => {
    return fetch('https://vendorlist.consensu.org/vendorlist.json')
@@ -69,29 +70,62 @@ const commands = {
       log.error(`Failed to load vendor list from vendors.json`, err);
     });
   },
-
   readVendorConsent: () => {
     return readCookie(COOKIE_NAME);
   },
-
   writeVendorConsent: ({encodedValue}) => {
     return writeCookie({name: COOKIE_NAME, value: encodedValue});
   }
 };
 
 window.addEventListener('message', (event) => {
-  const data = event.data.vendorConsent;
-  if (data && typeof commands[data.command] === 'function') {
-    const { command } = data;
-    commands[command](data).then(result => {
-      event.source.postMessage({
-        vendorConsent: {
-          ...data,
-          result,
-          supports_samesite
-        }
-      }, event.origin);
-    });
+  var data;
+  // v1 - we'll remove this entirely when we're not using v1 anymore
+  if (event.data.vendorConsent) {
+    data = event.data.vendorConsent;
+    if (data && typeof commands[data.command] === 'function') {
+      const { command } = data;
+      commands[command](data).then(result => {
+        event.source.postMessage({
+          vendorConsent: {
+            ...data,
+            result,
+            supports_samesite
+          }
+        }, event.origin);
+      });
+    }
+  }
+  // v2 
+  else {
+    data = event.data;
+    if (data.command) {
+      var payload;
+      switch (data.command) {
+        case 'readAllCookies':
+          payload = {
+            v1: readCookieSync(COOKIE_NAME_V1),
+            v2: readCookieSync(COOKIE_NAME_V2)
+          };
+        case 'readCookie':
+          payload = { 
+            euconsent: readCookieSync(COOKIE_NAME_V2)
+          };
+          break;
+        case 'writeCookie':
+          payload = { 
+            success: writeCookieSync(data.euconsent)
+          };
+          break;
+      }
+      if (payload) {
+        payload.command = data.command;
+        payload.supports_samesite = supports_samesite;
+        event.source.postMessage(payload, event.origin);
+      } 
+    }
   }
 });
-window.parent.postMessage({ vendorConsent: { command: 'isLoaded' } }, '*');
+
+window.parent.postMessage({ vendorConsent: { command: 'isLoaded' } }, '*'); // leave this in for transition period
+window.parent.postMessage({ command: 'isLoaded' }, '*');
