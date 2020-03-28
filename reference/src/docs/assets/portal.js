@@ -107,6 +107,7 @@ window.addEventListener('message', (event) => {
             v1: readCookieSync(COOKIE_NAME_V1),
             v2: readCookieSync(COOKIE_NAME_V2)
           };
+          break;
         case 'readCookie':
           payload = { 
             euconsent: readCookieSync(COOKIE_NAME_V2)
