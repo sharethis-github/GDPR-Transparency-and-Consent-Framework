@@ -71,10 +71,10 @@ const commands = {
     });
   },
   readVendorConsent: () => {
-    return readCookie(COOKIE_NAME);
+    return readCookie(COOKIE_NAME_V1);
   },
   writeVendorConsent: ({encodedValue}) => {
-    return writeCookie({name: COOKIE_NAME, value: encodedValue});
+    return writeCookie({name: COOKIE_NAME_V1, value: encodedValue});
   }
 };
 
